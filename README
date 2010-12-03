@@ -1,1 +1,7 @@
 Fast and simple client to send and preferred access hosts over ssh.
+
+INSTALL
+./fast-remote install
+
+USAGE
+fast-remote --help

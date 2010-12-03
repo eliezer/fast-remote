@@ -5,55 +5,54 @@ menu(){
 	echo -e '======================================================= \033[33;1m Select Server  \033[m '
 	IFS_OLD=$IFS
 	IFS=";"
-	while read id ip name
+	while read id ip name color
 	do
-		color=31
 		shopt -s extglob
-		if [[ $name == dev* ]]; then
-			color=32
-		elif [[ $name == h* ]]; then
-			color=36
-		fi
 		echo -e $id '\033['$color';1m'$name'\033[m' - $ip
-	done < $NETSITE_UTILS/servers.properties 
+	done < $FAST_REMOTE/servers.properties 
 	echo -e '======================================================== \033[33;1m More Options  \033[m '
 	echo -e 'q - to quit'
-	echo -e 'a - add hosts to /etc/hosts'
 	IFS=$IFS_OLD
 }
 
-add_hosts(){
-	su -c "echo '#Start - hosts' >> /etc/hosts;cat $NETSITE_UTILS/servers.properties | sed 's/^.*;\(.*\);\(.*\).*$/\1 \2/' >> /etc/hosts;echo '#End - hosts' >> /etc/hosts"
-}
-
 install(){
-	echo 'export NETSITE_UTILS='$PWD >> ~/.bashrc
-	echo 'PATH=$PATH:$NETSITE_UTILS' >> ~/.bashrc
+	define_bash_file
+	add_to_bash_file 'export FAST_REMOTE='$PWD;
+	add_to_bash_file 'export PATH=$PATH:$FAST_REMOTE'	
 	chmod +x $0
 	echo "Installation successfully"
+	source_bash_file_msg
 	echo "usage: fast-remote --help"
-	flush_bashrc
 }
 
-flush_bashrc(){
-	/bin/bash
-	#echo "please: run command: source ~/.bashrc"
-	#echo ":("
+source_bash_file_msg(){
+	echo "Run command: 'source "$HOME/$bash_file"' or logout/login"
+}
+add_to_bash_file(){
+	echo $1 >> $HOME/$bash_file;
 }
 
 define_default_user(){
+	define_bash_file
 	echo "Set default user name"
 	read username
-	echo 'export DAFAULT_USER_FAST_REMOTE='$username >> ~/.bashrc
-	flush_bashrc
+	add_to_bash_file 'export DAFAULT_USER_FAST_REMOTE='$username
+	source_bash_file_msg
 }
 
-help_app(){
+define_bash_file(){
+	bash_file=".bashrc";
+	if [ `uname` = "Darwin" ] ; then
+		bash_file=".bash_profile";
+	fi
+}
+
+help_msg(){
 	echo -e "Usage:\n"
 	echo -e "'fast-remote install' to install"
 	echo -e "'fast-remote set_user' to define default user connect"
 	echo -e "'fast-remote' to connect ssh (ssh SERVER)"
-	echo -e "'fast-remote /home/user/file.tar' to transfer file scp (scp file SERVER:/home/user)\n"
+	echo -e "'fast-remote /home/user/file.tar' to transfer file scp (scp file SERVER:/HOME_DIR)\n"
 }
 
 start(){
@@ -61,12 +60,10 @@ start(){
 	menu
 
 	read option
-	server=`cat $NETSITE_UTILS/servers.properties | egrep -i "^$option;"`
+	server=`cat $FAST_REMOTE/servers.properties | egrep -i "^$option;"`
 
-	if [[ $option = "q" || "x$option" = "x" ]]; then
+	if [ $option = "q" ]; then
 		exit	   	
-	elif [ $option = "a" ]; then
-		add_hosts
 	elif [ -z $server ]; then
 	   	echo "Ivalid option"
 	else
@@ -79,7 +76,7 @@ start(){
 			ssh $user@$ip
 			start
 		fi
-		scp $1 $user@$ip:/home/$user
+		scp $1 $user@$ip:.
 	fi
 	exit
 }
@@ -87,8 +84,8 @@ start(){
 case "$1" in 
 	install) install;; 
 	set_user) define_default_user;; 
-	--help) help_app;; 
-	-h) help_app;; 
+	--help) help_msg;; 
+	-h) help_msg;; 
 	*) start $1;; 
 esac
 
