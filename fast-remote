@@ -64,7 +64,7 @@ start(){
 
 	if [ $option = "q" ]; then
 		exit	   	
-	elif [ -z $server ]; then
+	elif [ -z "$server" ]; then
 	   	echo "Ivalid option"
 	else
 		user=$DAFAULT_USER_FAST_REMOTE
