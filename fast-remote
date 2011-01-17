@@ -60,6 +60,8 @@ start(){
 	menu
 
 	read option
+        user=`echo $option | cut -d ' ' -f 2`
+        option=`echo $option | cut -d ' ' -f 1`
 	server=`cat $FAST_REMOTE/servers.properties | egrep -i "^$option;"`
 
 	if [ $option = "q" ]; then
@@ -67,10 +69,12 @@ start(){
 	elif [ -z "$server" ]; then
 	   	echo "Ivalid option"
 	else
-		user=$DAFAULT_USER_FAST_REMOTE
-		if [ -z $DAFAULT_USER_FAST_REMOTE ]; then
+                if [ $user = $option ]; then
+	  	  user=$DAFAULT_USER_FAST_REMOTE
+		  if [ -z $DAFAULT_USER_FAST_REMOTE ]; then
 			user=$USER
-		fi
+		  fi
+                fi
 		ip=`echo $server | cut -d \; -f 2`
 		if [ -z $1 ]; then
 			ssh $user@$ip
