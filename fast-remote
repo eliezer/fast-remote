@@ -5,10 +5,10 @@ menu(){
 	echo -e '======================================================= \033[33;1m Select Server  \033[m '
 	IFS_OLD=$IFS
 	IFS=";"
-	while read id ip name color
+	while read id ip name color user
 	do
 		shopt -s extglob
-		echo -e $id '\033['$color';1m'$name'\033[m' - $ip
+		echo -e $id '\033['$color';1m'$name'\033[m' - $user@$ip
 	done < $FAST_REMOTE/servers.properties 
 	echo -e '======================================================== \033[33;1m More Options  \033[m '
 	echo -e 'q - to quit'
@@ -36,7 +36,7 @@ define_default_user(){
 	define_bash_file
 	echo "Set default user name"
 	read username
-	add_to_bash_file 'export DAFAULT_USER_FAST_REMOTE='$username
+	add_to_bash_file 'export DEFAULT_USER_FAST_REMOTE='$username
 	source_bash_file_msg
 }
 
@@ -69,12 +69,16 @@ start(){
 	elif [ -z "$server" ]; then
 	   	echo "Ivalid option"
 	else
-                if [ $user = $option ]; then
-	  	  user=$DAFAULT_USER_FAST_REMOTE
-		  if [ -z $DAFAULT_USER_FAST_REMOTE ]; then
-			user=$USER
-		  fi
-                fi
+        if [ $user = $option ]; then
+            user=$DEFAULT_USER_FAST_REMOTE
+		    if [ -z $DEFAULT_USER_FAST_REMOTE ]; then
+			    user=$USER
+		    fi
+		    user_configured=`echo $server | cut -d \; -f 5`
+		    if [ $user_configured ]; then
+	            user=$user_configured
+            fi
+        fi
 		ip=`echo $server | cut -d \; -f 2`
 		if [ -z $1 ]; then
 			ssh $user@$ip
